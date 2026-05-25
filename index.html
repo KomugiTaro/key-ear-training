@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Key Detector - 耳コピ練習ゲーム</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <header>
+      <div class="logo">
+        <span class="logo-icon">🎵</span>
+        <h1>Key Detector</h1>
+      </div>
+      <div class="score-board">
+        <div class="score-item">
+          <span class="label">SCORE</span>
+          <span id="score-val" class="value">0</span>
+        </div>
+        <div class="score-item">
+          <span class="label">STREAK</span>
+          <span id="streak-val" class="value">0</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- モード切替タブ -->
+    <div class="mode-tabs">
+      <button class="tab-btn active" id="tab-learn">🔰 ラーニング（学習）</button>
+      <button class="tab-btn" id="tab-challenge">🏆 チャレンジ（テスト）</button>
+    </div>
+
+    <main>
+      <!-- ==================== ラーニングモード ==================== -->
+      <section class="game-card" id="learn-card">
+        <!-- 学習ステップ選択 -->
+        <div class="learn-steps">
+          <button class="step-btn active" id="step-btn-resolve" data-step="resolve">ステップ1: 解決・もやもや</button>
+          <button class="step-btn" id="step-btn-find-tonic" data-step="find-tonic">ステップ2: 主音を探せ！</button>
+        </div>
+
+        <!-- ステップ1: 解決・もやもや (Resolve Game) -->
+        <div class="step-content active" id="content-resolve">
+          <div class="instruction-box">
+            <h4>💡 すっきり感（解決）を掴もう</h4>
+            <p>コード進行を聴いて、最後が<strong>「すっきり終わった（解決）」</strong>か、<strong>「もやもやした未解決の状態」</strong>かを聴き分けます。音楽の「着地点」を感じる練習です。</p>
+          </div>
+
+          <div class="visualizer-container">
+            <div class="visualizer-ring" id="btn-play-resolve">
+              <span class="play-icon">▶</span>
+            </div>
+            <p class="status-text" id="status-resolve">再生ボタンを押してコードを聴こう</p>
+          </div>
+
+          <div class="choices-resolve-grid">
+            <button class="resolve-choice-btn" id="choice-resolved">
+              <span class="emoji">😊</span>
+              <div class="text">
+                <strong>すっきり (解決)</strong>
+                <span>安定した着地感</span>
+              </div>
+            </button>
+            <button class="resolve-choice-btn" id="choice-unresolved">
+              <span class="emoji">🌀</span>
+              <div class="text">
+                <strong>もやもや (未解決)</strong>
+                <span>途中で止まった感</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- ステップ2: 主音を探せ！ (Find Tonic Game) -->
+        <div class="step-content" id="content-find-tonic">
+          <div class="instruction-box">
+            <h4>💡 伴奏に合わせて主音（ルート）を探そう</h4>
+            <p>伴奏がループで流れ続けます。下の鍵盤をタップして音を鳴らし、<strong>「伴奏に一番しっくり溶け込み、着地する音（主音＝ド）」</strong>を耳で探してください。</p>
+          </div>
+
+          <div class="visualizer-container">
+            <div class="visualizer-ring" id="btn-play-loop">
+              <span class="play-icon">▶</span>
+            </div>
+            <p class="status-text" id="status-loop">伴奏のループ再生をスタート</p>
+          </div>
+
+          <!-- 簡易鍵盤UI -->
+          <div class="keyboard-container">
+            <div class="keyboard">
+              <!-- 白鍵 -->
+              <div class="key white" data-note="C" data-midi-offset="0"><span>C</span></div>
+              <div class="key black" data-note="C#" data-midi-offset="1"></div>
+              <div class="key white" data-note="D" data-midi-offset="2"><span>D</span></div>
+              <div class="key black" data-note="D#" data-midi-offset="3"></div>
+              <div class="key white" data-note="E" data-midi-offset="4"><span>E</span></div>
+              <div class="key white" data-note="F" data-midi-offset="5"><span>F</span></div>
+              <div class="key black" data-note="F#" data-midi-offset="6"></div>
+              <div class="key white" data-note="G" data-midi-offset="7"><span>G</span></div>
+              <div class="key black" data-note="G#" data-midi-offset="8"></div>
+              <div class="key white" data-note="A" data-midi-offset="9"><span>A</span></div>
+              <div class="key black" data-note="A#" data-midi-offset="10"></div>
+              <div class="key white" data-note="B" data-midi-offset="11"><span>B</span></div>
+              <div class="key white" data-note="C2" data-midi-offset="12"><span>C</span></div>
+            </div>
+          </div>
+
+          <div class="selection-display">
+            選択した音: <span id="selected-note-name">なし</span>
+          </div>
+
+          <button id="btn-submit-tonic" class="submit-tonic-btn" disabled>🎯 これが主音（ルート）！</button>
+        </div>
+      </section>
+
+      <!-- ==================== チャレンジモード ==================== -->
+      <section class="game-card" id="challenge-card" style="display: none;">
+        <div class="difficulty-selector">
+          <button class="diff-btn active" id="diff-easy" data-diff="easy">初級</button>
+          <button class="diff-btn" id="diff-medium" data-diff="medium">中級</button>
+          <button class="diff-btn" id="diff-hard" data-diff="hard">上級</button>
+        </div>
+
+        <div class="visualizer-container">
+          <div class="visualizer-ring" id="btn-play-challenge">
+            <span class="play-icon">▶</span>
+          </div>
+          <p class="status-text" id="status-challenge">再生ボタンを押してコードを聴こう</p>
+        </div>
+
+        <div class="audio-controls">
+          <button id="btn-hint" class="hint-btn" disabled>💡 主音(Tonic)を聴く</button>
+        </div>
+
+        <div class="quiz-area">
+          <h3 class="section-title">この曲のキーは？</h3>
+          <div class="choices-grid" id="choices-grid">
+            <!-- JSで動的に選択肢を生成 -->
+          </div>
+        </div>
+      </section>
+
+      <!-- 結果・アドバイスフィードバック -->
+      <section class="feedback-panel" id="feedback-panel">
+        <div class="feedback-content">
+          <p id="feedback-message">再生ボタンを押してゲームを始めましょう！</p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>© 2026 Key Detector. Training your relative pitch.</p>
+    </footer>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
