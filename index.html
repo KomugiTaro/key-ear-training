@@ -30,8 +30,9 @@
 
     <!-- モード切替タブ -->
     <div class="mode-tabs">
-      <button class="tab-btn active" id="tab-learn">🔰 ラーニング（学習）</button>
-      <button class="tab-btn" id="tab-challenge">🏆 チャレンジ（テスト）</button>
+      <button class="tab-btn active" id="tab-learn">🔰 ラーニング</button>
+      <button class="tab-btn" id="tab-challenge">🏆 チャレンジ</button>
+      <button class="tab-btn" id="tab-baseline">⚔️ モンスター討伐</button>
     </div>
 
     <main>
@@ -43,7 +44,7 @@
           <button class="step-btn" id="step-btn-find-tonic" data-step="find-tonic">ステップ2: 主音を探せ！</button>
         </div>
 
-        <!-- ステップ1: 解決・もやもや (Resolve Game) -->
+        <!-- ステップ1: 解決・もやもや -->
         <div class="step-content active" id="content-resolve">
           <div class="instruction-box">
             <h4>💡 すっきり感（解決）を掴もう</h4>
@@ -75,7 +76,7 @@
           </div>
         </div>
 
-        <!-- ステップ2: 主音を探せ！ (Find Tonic Game) -->
+        <!-- ステップ2: 主音を探せ！ -->
         <div class="step-content" id="content-find-tonic">
           <div class="instruction-box">
             <h4>💡 伴奏に合わせて主音（ルート）を探そう</h4>
@@ -141,6 +142,379 @@
           <div class="choices-grid" id="choices-grid">
             <!-- JSで動的に選択肢を生成 -->
           </div>
+        </div>
+      </section>
+
+      <!-- ==================== モンスター討伐RPGモード ==================== -->
+      <section class="game-card" id="baseline-card" style="display: none;">
+        
+        <!-- A. ロビー画面 (ショップ & 強化) -->
+        <div id="baseline-lobby" class="rpg-screen">
+          <div class="lobby-header">
+            <h3>⚔️ 討伐ロビー ＆ 強化ショップ</h3>
+            <div class="lobby-stats">
+              <div class="stat-badge">💰 GOLD: <span id="lobby-gold-val">0</span></div>
+              <div class="stat-badge">🏆 HIGH SCORE: <span id="lobby-highscore-val">0</span></div>
+            </div>
+          </div>
+
+          <div class="shop-container">
+            <h4>🛒 永続強化ショップ (ゴールドを消費して恒久パワーアップ)</h4>
+            <div class="shop-grid">
+              <div class="shop-item" id="shop-hp">
+                <div class="item-info">
+                  <span class="item-title">❤️ 最大HP強化</span>
+                  <span class="item-desc">戦闘での初期HPを増やします。</span>
+                  <span class="item-level">Lv.<span id="upgrade-hp-lvl">1</span> (HP: <span id="upgrade-hp-val">100</span>)</span>
+                </div>
+                <button class="upgrade-btn" id="btn-upgrade-hp">💰 <span id="cost-hp">50</span></button>
+              </div>
+
+              <div class="shop-item" id="shop-atk">
+                <div class="item-info">
+                  <span class="item-title">⚔️ 攻撃力強化</span>
+                  <span class="item-desc">モンスターに与えるダメージを増加。</span>
+                  <span class="item-level">Lv.<span id="upgrade-atk-lvl">1</span> (ATK: <span id="upgrade-atk-val">1.0</span>x)</span>
+                </div>
+                <button class="upgrade-btn" id="btn-upgrade-atk">💰 <span id="cost-atk">50</span></button>
+              </div>
+
+              <div class="shop-item" id="shop-time">
+                <div class="item-info">
+                  <span class="item-title">⏳ 制限時間強化</span>
+                  <span class="item-desc">回答時の制限時間を延長します。</span>
+                  <span class="item-level">Lv.<span id="upgrade-time-lvl">1</span> (TIME: +<span id="upgrade-time-val">0</span>秒)</span>
+                </div>
+                <button class="upgrade-btn" id="btn-upgrade-time">💰 <span id="cost-time">50</span></button>
+              </div>
+            </div>
+          </div>
+
+          <button id="btn-start-run" class="start-run-btn">🔥 冒険を開始する (モンスター討伐へ)</button>
+          <button id="btn-start-free-session" class="start-run-btn" style="background: linear-gradient(135deg, var(--accent-purple) 0%, #6200ea 100%); box-shadow: 0 4px 20px var(--accent-purple-glow); margin-top: 5px;">🎸 ご褒美セッションを直接遊ぶ</button>
+        </div>
+
+        <!-- B. 戦闘画面 -->
+        <div id="baseline-battle" class="rpg-screen" style="display: none;">
+          <!-- プレイヤーHP ＆ ゴールドHUD -->
+          <div class="battle-header-hud">
+            <div class="player-hud">
+              <span class="hud-label">❤️ PLAYER HP</span>
+              <div class="player-hp-bar-container">
+                <div class="player-hp-bar" id="player-hp-bar" style="width: 100%;"></div>
+                <span class="hp-text" id="player-hp-text">100 / 100</span>
+              </div>
+            </div>
+            <div class="run-gold-hud">
+              <span class="gold-icon">💰</span> <span id="run-gold-val">0</span>
+            </div>
+          </div>
+
+          <!-- バトルアリーナ (敵の表示 & ステータス) -->
+          <div class="battle-arena">
+            <!-- 制限時間バー -->
+            <div class="timer-bar-container">
+              <div class="timer-bar" id="battle-timer-bar"></div>
+            </div>
+
+            <!-- モンスタービジュアル & エフェクト -->
+            <div class="monster-outer-box">
+              <div class="monster-container" id="monster-container">
+                <div class="monster-sprite" id="monster-sprite">
+                  <div class="monster-horn left"></div>
+                  <div class="monster-horn right"></div>
+                  <div class="monster-eye left"><div class="pupil"></div></div>
+                  <div class="monster-eye right"><div class="pupil"></div></div>
+                  <div class="monster-mouth"></div>
+                </div>
+                <div class="slash-effect" id="slash-effect"></div>
+                <div class="combo-popup" id="combo-popup"></div>
+              </div>
+            </div>
+
+            <!-- モンスター情報 -->
+            <div class="monster-info">
+              <div class="monster-header">
+                <span class="monster-name" id="monster-name">音感スライム</span>
+                <span class="monster-level" id="monster-level">Lv.1</span>
+              </div>
+              <div class="hp-bar-container">
+                <div class="hp-bar" id="monster-hp-bar" style="width: 100%;"></div>
+                <span class="hp-text" id="monster-hp-text">100 / 100</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="visualizer-container" id="baseline-visualizer-container" style="margin-top: -10px;">
+            <div class="visualizer-ring" id="btn-play-baseline">
+              <span class="play-icon">▶</span>
+            </div>
+            <p class="status-text" id="status-baseline">演奏を聴いて、敵の弱点を暴け！</p>
+          </div>
+
+          <!-- ユーザーの入力状態（何拍目を当てているかが分かりやすいようにする） -->
+          <div class="input-tracker">
+            <h5 class="tracker-title">ベースラインの解明度</h5>
+            <div class="tracker-slots" id="tracker-slots">
+              <div class="slot empty">？</div>
+              <div class="slot empty">？</div>
+              <div class="slot empty">？</div>
+              <div class="slot empty">？</div>
+            </div>
+          </div>
+
+          <!-- ギター指板UI -->
+          <div class="fretboard-container" id="fretboard-ui-container">
+            <div class="fretboard">
+              <div class="nut"></div>
+              <div class="fret-line" style="left: 16.66%;"></div>
+              <div class="fret-line" style="left: 33.33%;"></div>
+              <div class="fret-line" style="left: 50.00%;"></div>
+              <div class="fret-line" style="left: 66.66%;"></div>
+              <div class="fret-line" style="left: 83.33%;"></div>
+
+              <div class="fret-marker" style="left: 41.66%;"></div>
+              <div class="fret-marker" style="left: 75.00%;"></div>
+
+              <!-- 1弦 -->
+              <div class="string-line" style="top: 10%;"></div>
+              <div class="string-nodes" style="top: 10%;">
+                <button class="fret-node open" data-string="1" data-fret="0" data-note="E">E</button>
+                <button class="fret-node" data-string="1" data-fret="1" data-note="F">F</button>
+                <button class="fret-node" data-string="1" data-fret="2" data-note="F#">F#</button>
+                <button class="fret-node" data-string="1" data-fret="3" data-note="G">G</button>
+                <button class="fret-node" data-string="1" data-fret="4" data-note="G#">G#</button>
+                <button class="fret-node" data-string="1" data-fret="5" data-note="A">A</button>
+              </div>
+
+              <!-- 2弦 -->
+              <div class="string-line" style="top: 26%;"></div>
+              <div class="string-nodes" style="top: 26%;">
+                <button class="fret-node open" data-string="2" data-fret="0" data-note="B">B</button>
+                <button class="fret-node" data-string="2" data-fret="1" data-note="C">C</button>
+                <button class="fret-node" data-string="2" data-fret="2" data-note="C#">C#</button>
+                <button class="fret-node" data-string="2" data-fret="3" data-note="D">D</button>
+                <button class="fret-node" data-string="2" data-fret="4" data-note="D#">D#</button>
+                <button class="fret-node" data-string="2" data-fret="5" data-note="E">E</button>
+              </div>
+
+              <!-- 3弦 -->
+              <div class="string-line" style="top: 42%;"></div>
+              <div class="string-nodes" style="top: 42%;">
+                <button class="fret-node open" data-string="3" data-fret="0" data-note="G">G</button>
+                <button class="fret-node" data-string="3" data-fret="1" data-note="G#">G#</button>
+                <button class="fret-node" data-string="3" data-fret="2" data-note="A">A</button>
+                <button class="fret-node" data-string="3" data-fret="3" data-note="A#">A#</button>
+                <button class="fret-node" data-string="3" data-fret="4" data-note="B">B</button>
+                <button class="fret-node" data-string="3" data-fret="5" data-note="C">C</button>
+              </div>
+
+              <!-- 4弦 -->
+              <div class="string-line" style="top: 58%;"></div>
+              <div class="string-nodes" style="top: 58%;">
+                <button class="fret-node open" data-string="4" data-fret="0" data-note="D">D</button>
+                <button class="fret-node" data-string="4" data-fret="1" data-note="D#">D#</button>
+                <button class="fret-node" data-string="4" data-fret="2" data-note="E">E</button>
+                <button class="fret-node" data-string="4" data-fret="3" data-note="F">F</button>
+                <button class="fret-node" data-string="4" data-fret="4" data-note="F#">F#</button>
+                <button class="fret-node" data-string="4" data-fret="5" data-note="G">G</button>
+              </div>
+
+              <!-- 5弦 -->
+              <div class="string-line" style="top: 74%;"></div>
+              <div class="string-nodes" style="top: 74%;">
+                <button class="fret-node open" data-string="5" data-fret="0" data-note="A">A</button>
+                <button class="fret-node" data-string="5" data-fret="1" data-note="A#">A#</button>
+                <button class="fret-node" data-string="5" data-fret="2" data-note="B">B</button>
+                <button class="fret-node" data-string="5" data-fret="3" data-note="C">C</button>
+                <button class="fret-node" data-string="5" data-fret="4" data-note="C#">C#</button>
+                <button class="fret-node" data-string="5" data-fret="5" data-note="D">D</button>
+              </div>
+
+              <!-- 6弦 -->
+              <div class="string-line" style="top: 90%;"></div>
+              <div class="string-nodes" style="top: 90%;">
+                <button class="fret-node open" data-string="6" data-fret="0" data-note="E">E</button>
+                <button class="fret-node" data-string="6" data-fret="1" data-note="F">F</button>
+                <button class="fret-node" data-string="6" data-fret="2" data-note="F#">F#</button>
+                <button class="fret-node" data-string="6" data-fret="3" data-note="G">G</button>
+                <button class="fret-node" data-string="6" data-fret="4" data-note="G#">G#</button>
+                <button class="fret-node" data-string="6" data-fret="5" data-note="A">A</button>
+              </div>
+            </div>
+            <div class="string-label" style="top: 10%;">1弦 (E)</div>
+            <div class="string-label" style="top: 26%;">2弦 (B)</div>
+            <div class="string-label" style="top: 42%;">3弦 (G)</div>
+            <div class="string-label" style="top: 58%;">4弦 (D)</div>
+            <div class="string-label" style="top: 74%;">5弦 (A)</div>
+            <div class="string-label" style="top: 90%;">6弦 (E)</div>
+          </div>
+
+          <!-- 最終キー当てクイズ表示部 -->
+          <div class="key-choices-area" id="baseline-key-choices" style="display: none;">
+            <h3 class="section-title">ファイナル判定：この進行のキー（調）は？</h3>
+            <div class="choices-grid" id="baseline-key-grid">
+              <!-- JSで動的にキーの4択ボタンを生成 -->
+            </div>
+          </div>
+
+          <!-- ご褒美演奏表示エリア（最初は非表示） -->
+          <div class="reward-play-area" id="baseline-reward-area" style="display: none;">
+            <h3 class="section-title">✨ Victory Performance ✨</h3>
+            <p class="reward-status-text" id="reward-status-text">モンスター撃破！ご褒美セッションを演奏中...</p>
+            
+            <div class="music-note-animation" id="reward-note-animation">
+              <span class="note-particle p1">🎵</span>
+              <span class="note-particle p2">🎶</span>
+              <span class="note-particle p3">🎸</span>
+              <span class="note-particle p4">🎹</span>
+            </div>
+
+            <!-- アドリブ演奏切り替えボタン -->
+            <button id="btn-reward-mode-toggle" class="mode-toggle-btn">🤖 自動演奏モード中</button>
+
+            <!-- アドリブ用ギター指板UI（最初は非表示、JSで制御） -->
+            <div class="adlib-fretboard-wrapper" id="adlib-fretboard-wrapper" style="display: none; width: 100%;">
+              <div class="fretboard-container" id="adlib-fretboard-container" style="margin: 10px 0; width: 100%;">
+                <div class="fretboard">
+                  <div class="nut"></div>
+                  <div class="fret-line" style="left: 16.66%;"></div>
+                  <div class="fret-line" style="left: 33.33%;"></div>
+                  <div class="fret-line" style="left: 50.00%;"></div>
+                  <div class="fret-line" style="left: 66.66%;"></div>
+                  <div class="fret-line" style="left: 83.33%;"></div>
+
+                  <div class="fret-marker" style="left: 41.66%;"></div>
+                  <div class="fret-marker" style="left: 75.00%;"></div>
+
+                  <!-- 1弦 -->
+                  <div class="string-line" style="top: 10%;"></div>
+                  <div class="string-nodes" style="top: 10%;">
+                    <button class="adlib-fret-node open" data-string="1" data-fret="0" data-note="E">E</button>
+                    <button class="adlib-fret-node" data-string="1" data-fret="1" data-note="F">F</button>
+                    <button class="adlib-fret-node" data-string="1" data-fret="2" data-note="F#">F#</button>
+                    <button class="adlib-fret-node" data-string="1" data-fret="3" data-note="G">G</button>
+                    <button class="adlib-fret-node" data-string="1" data-fret="4" data-note="G#">G#</button>
+                    <button class="adlib-fret-node" data-string="1" data-fret="5" data-note="A">A</button>
+                  </div>
+
+                  <!-- 2弦 -->
+                  <div class="string-line" style="top: 26%;"></div>
+                  <div class="string-nodes" style="top: 26%;">
+                    <button class="adlib-fret-node open" data-string="2" data-fret="0" data-note="B">B</button>
+                    <button class="adlib-fret-node" data-string="2" data-fret="1" data-note="C">C</button>
+                    <button class="adlib-fret-node" data-string="2" data-fret="2" data-note="C#">C#</button>
+                    <button class="adlib-fret-node" data-string="2" data-fret="3" data-note="D">D</button>
+                    <button class="adlib-fret-node" data-string="2" data-fret="4" data-note="D#">D#</button>
+                    <button class="adlib-fret-node" data-string="2" data-fret="5" data-note="E">E</button>
+                  </div>
+
+                  <!-- 3弦 -->
+                  <div class="string-line" style="top: 42%;"></div>
+                  <div class="string-nodes" style="top: 42%;">
+                    <button class="adlib-fret-node open" data-string="3" data-fret="0" data-note="G">G</button>
+                    <button class="adlib-fret-node" data-string="3" data-fret="1" data-note="G#">G#</button>
+                    <button class="adlib-fret-node" data-string="3" data-fret="2" data-note="A">A</button>
+                    <button class="adlib-fret-node" data-string="3" data-fret="3" data-note="A#">A#</button>
+                    <button class="adlib-fret-node" data-string="3" data-fret="4" data-note="B">B</button>
+                    <button class="adlib-fret-node" data-string="3" data-fret="5" data-note="C">C</button>
+                  </div>
+
+                  <!-- 4弦 -->
+                  <div class="string-line" style="top: 58%;"></div>
+                  <div class="string-nodes" style="top: 58%;">
+                    <button class="adlib-fret-node open" data-string="4" data-fret="0" data-note="D">D</button>
+                    <button class="adlib-fret-node" data-string="4" data-fret="1" data-note="D#">D#</button>
+                    <button class="adlib-fret-node" data-string="4" data-fret="2" data-note="E">E</button>
+                    <button class="adlib-fret-node" data-string="4" data-fret="3" data-note="F">F</button>
+                    <button class="adlib-fret-node" data-string="4" data-fret="4" data-note="F#">F#</button>
+                    <button class="adlib-fret-node" data-string="4" data-fret="5" data-note="G">G</button>
+                  </div>
+
+                  <!-- 5弦 -->
+                  <div class="string-line" style="top: 74%;"></div>
+                  <div class="string-nodes" style="top: 74%;">
+                    <button class="adlib-fret-node open" data-string="5" data-fret="0" data-note="A">A</button>
+                    <button class="adlib-fret-node" data-string="5" data-fret="1" data-note="A#">A#</button>
+                    <button class="adlib-fret-node" data-string="5" data-fret="2" data-note="B">B</button>
+                    <button class="adlib-fret-node" data-string="5" data-fret="3" data-note="C">C</button>
+                    <button class="adlib-fret-node" data-string="5" data-fret="4" data-note="C#">C#</button>
+                    <button class="adlib-fret-node" data-string="5" data-fret="5" data-note="D">D</button>
+                  </div>
+
+                  <!-- 6弦 -->
+                  <div class="string-line" style="top: 90%;"></div>
+                  <div class="string-nodes" style="top: 90%;">
+                    <button class="adlib-fret-node open" data-string="6" data-fret="0" data-note="E">E</button>
+                    <button class="adlib-fret-node" data-string="6" data-fret="1" data-note="F">F</button>
+                    <button class="adlib-fret-node" data-string="6" data-fret="2" data-note="F#">F#</button>
+                    <button class="adlib-fret-node" data-string="6" data-fret="3" data-note="G">G</button>
+                    <button class="adlib-fret-node" data-string="6" data-fret="4" data-note="G#">G#</button>
+                    <button class="adlib-fret-node" data-string="6" data-fret="5" data-note="A">A</button>
+                  </div>
+                </div>
+                <div class="string-label" style="top: 10%;">1弦 (E)</div>
+                <div class="string-label" style="top: 26%;">2弦 (B)</div>
+                <div class="string-label" style="top: 42%;">3弦 (G)</div>
+                <div class="string-label" style="top: 58%;">4弦 (D)</div>
+                <div class="string-label" style="top: 74%;">5弦 (A)</div>
+                <div class="string-label" style="top: 90%;">6弦 (E)</div>
+              </div>
+
+              <!-- 音楽理論・色分け解説エリア -->
+              <div class="theory-legend-container" id="reward-theory-legend">
+                <h4>📖 アドリブ音楽理論ガイド (上に行くほど伴奏に合いやすい音です)</h4>
+                <div class="legend-grid">
+                  <div class="legend-item"><span class="color-dot tonic">🟠</span> <strong>【第1位】トニック:</strong> キーの最も重要な「主音」（C）。フレーズの最後の着地・解決に最適。</div>
+                  <div class="legend-item"><span class="color-dot chordtone">🟢</span> <strong>【第2位】ダイアトニックコードの音:</strong> 1, 2, 3, 5, 6度の音（Cキーなら C, D, E, G, A）。伴奏と最も美しく馴染みます。</div>
+                  <div class="legend-item"><span class="color-dot scale">🟡</span> <strong>【第3位】スケール音:</strong> ダイアトニックスケールの残りの音（F, B / 4度, 7度の音）。</div>
+                  <div class="legend-item"><span class="color-dot avoid">🔴</span> <strong>【第4位】合いにくい音:</strong> スケール外のクロマチック音（黒鍵）。伴奏とぶつかって濁りやすい音。</div>
+                </div>
+                <div class="theory-advice-box" style="margin-top: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 4px solid var(--accent-purple); font-size: 0.92rem; color: #e0e0e0; display: flex; align-items: center; gap: 8px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
+                  <span>💡 <strong>アドリブのコツ:</strong> 指板上で<strong>隣同士の音</strong>を弾いたら、自然で綺麗なメロディになりやすいよ！</span>
+                </div>
+              </div>
+            </div>
+
+            <button id="btn-skip-reward" class="skip-reward-btn">🎁 パワーアップカードを選択する</button>
+          </div>
+        </div>
+
+        <!-- C. パワーアップ選択画面 -->
+        <div id="baseline-powerup" class="rpg-screen" style="display: none;">
+          <div class="powerup-header">
+            <h3>✨ モンスター撃破！ パワーアップ選択</h3>
+            <p>この冒険中のみ有効な能力を1つ選んでください。</p>
+          </div>
+          <div class="powerup-cards-grid" id="powerup-cards-container">
+            <!-- JSで動的に3枚のカードを生成 -->
+          </div>
+        </div>
+
+        <!-- D. ゲームオーバー画面 -->
+        <div id="baseline-gameover" class="rpg-screen" style="display: none;">
+          <div class="gameover-header">
+            <h2 class="gameover-title">💀 GAME OVER 💀</h2>
+            <p>プレイヤーのHPが0になりました...</p>
+          </div>
+          
+          <div class="result-box">
+            <h4>📊 討伐リザルト</h4>
+            <div class="result-row">
+              <span>到達モンスターレベル:</span>
+              <strong id="result-level">Lv.1</strong>
+            </div>
+            <div class="result-row">
+              <span>獲得ゴールド:</span>
+              <strong id="result-gold">💰 0</strong>
+            </div>
+            <div class="result-row">
+              <span>今回のスコア:</span>
+              <strong id="result-score">0</strong>
+            </div>
+          </div>
+
+          <button id="btn-go-lobby" class="go-lobby-btn">🏡 ゴールドを持ち帰ってロビーへ</button>
         </div>
       </section>
 
